@@ -14,3 +14,13 @@ Year,Month,Company A, Company B,Company C, .............Company N
 
 1. List for each Company year and month in which the share price was highest.
 2. unit testcases  
+
+
+
+How to run
+==========
+
+1. max-problem : ./max-problem.py < CSV_DATA_FILE
+  
+2. unit testing : ./unit_testing.py
+Please Note: unit_testing requires max-problem.py to be in current work directory
