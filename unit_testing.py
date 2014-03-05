@@ -9,12 +9,10 @@
 
 import unittest
 import random
-import subprocess
+import max_shares
 from cStringIO import StringIO
 import os
 import io
-
-SCRIPT_PATH = "./max-shares.py"     # PATH OF SCRIPT
 
 # Best way to test is have 'Randomize' testcases
 class RandomCSVInput(unittest.TestCase):   
@@ -25,7 +23,7 @@ class RandomCSVInput(unittest.TestCase):
                       'Oct', 'Nov', 'Dec']  # Jan-Dec 
         self.share_values = range(10, 100)  # Default 10-100, Derived classes can change it
         self.no_companies = 5               # Default 5 companies, Derived classes can change it 
-        self.no_entries = 5                 # Default 5 entries, Derived classes can change it
+        self.no_entries = (2013 - 1990)*12  # Default 5 entries, Derived classes can change it
         self.csv_rand_input = ['Year', 'Month']
         self.check_dict = {}
         # Construct the header of CSV file     
@@ -53,14 +51,6 @@ class RandomCSVInput(unittest.TestCase):
 class BadCSVInput(RandomCSVInput):   # Uses Random csv input from base class
     """ Class to test for bad input """
     # Bad input - no header
-    def test_datamissing(self):
-        """ When  CSV input has few fields missing"""
-        self.csv_rand_input = self.csv_rand_input[:random.choice(range(len(self.csv_rand_input)))] # Modify the generated CSV   
-        process = subprocess.Popen(SCRIPT_PATH, shell=True, stdin=subprocess.PIPE\
-                         ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.stdin.write(self.csv_rand_input)
-        stdout, stderr = process.communicate()
-        self.assertTrue('Critical' in stdout or not stderr )
 
     def test_sharevalues(self):
         """ When CSV input has wrong (string) share values """
@@ -68,11 +58,8 @@ class BadCSVInput(RandomCSVInput):   # Uses Random csv input from base class
         self.csv_rand_input_second_line = ','.join(self.csv_rand_input[1].split(',')[:-1] + ["hello world"])
         self.csv_rand_input[1] = self.csv_rand_input_second_line 
         self.csv_rand_input = '\n'.join(self.csv_rand_input)
-        process = subprocess.Popen(SCRIPT_PATH, shell=True, stdin=subprocess.PIPE\
-                         ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.stdin.write(self.csv_rand_input)
-        stdout, stderr = process.communicate()
-        self.assertTrue('Critical' in stdout)
+        ret_val = max_shares.main(self.csv_rand_input)
+        self.assertTrue('Critical' in ret_val)
 
 
 
@@ -80,25 +67,19 @@ class ValidateOutput(RandomCSVInput):  # Uses Random csv input from base class
     """ Class to validate for output """  
     # Validate results
     def test_results(self):
-        process = subprocess.Popen(SCRIPT_PATH, shell=True, stdin=subprocess.PIPE\
-                         ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.stdin.write(self.csv_rand_input)
-        stdout, stderr = process.communicate()
-        self.assertTrue(not 'Critical' in stdout)
-        for company_info in stdout.split('\n'):
+        ret_val = max_shares.main(self.csv_rand_input)
+        self.assertTrue(not 'Critical' in ret_val)
+        for company_info in ret_val.split('\n'):
            if not company_info:
                continue
            companyname, year, month = company_info.split(':') 
            self.assertTrue(str(year)+':'+str(month) in self.check_dict[companyname][max(self.check_dict[companyname].keys())])
         
     def test_all_companies(self):
-        process = subprocess.Popen(SCRIPT_PATH, shell=True, stdin=subprocess.PIPE\
-                         ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.stdin.write(self.csv_rand_input)
-        stdout, stderr = process.communicate()
-        self.assertTrue(not 'Critical' in stdout)
+        ret_val = max_shares.main(self.csv_rand_input)
+        self.assertTrue(not 'Critical' in ret_val)
         for key in self.check_dict:
-            self.assertTrue(key in stdout) 
+            self.assertTrue(key in ret_val)
 
 
             
